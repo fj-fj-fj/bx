@@ -1,6 +1,11 @@
+# global
 __pycache__
 py[cod]
 
+# third
+.mypy_cache
+
+# local
 .envrc
 *.log
 data/
