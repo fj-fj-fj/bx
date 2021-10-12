@@ -1,0 +1,6 @@
+# python-version 3.8.10
+fast-bitrix24==1.5.0
+Flask==2.0.2
+requests==2.25.1
+
+-r emulation/requirements.txt
