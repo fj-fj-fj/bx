@@ -56,3 +56,8 @@ reload: ## Reload Flask app.
 retest: clean ## Clear logs and other data and restart tests.
 	make kill_all t
 	code app.log
+
+git: check clean ## make git m="message"
+	git add .
+	git commit -m "$m"
+	git push -u origin main
