@@ -42,7 +42,7 @@ class CRM:
         self._delivery_code = self._current_deal.get('delivery_code')
         self._api(action)
 
-        for deal in self._current_deal.get('deal'):  # type: ignore
+        for deal in self._bx_responce.get('deal'):  # type: ignore
             if deal.get('delivery_code') == self._delivery_code:
                 self._fined_deal = deal
                 return True
@@ -52,9 +52,10 @@ class CRM:
         self._bx_responce = json.loads(
             self._webhook.get_all(operation, params=params),  # type: ignore
         )
-        assert isinstance(self._bx_responce, dict)
-        self._bx_errors = self._check_errors() and self._bx_responce or None
         logging.info(f'CRM._api() sets {self._bx_responce=}\n')
+        assert isinstance(self._bx_responce, dict)
+
+        self._bx_errors = self._check_errors() and self._bx_responce or None
         if self._bx_errors:
             logging.error(f'CRM._api() sets {self._bx_errors=}\n')
             raise self._bx_errors['error_description']
@@ -69,23 +70,34 @@ class CRM:
     def _equiualent(self, keys: Iterable) -> bool:
         return all([self._fined_deal[k] == self._current_deal[k] for k in keys])  # type: ignore # noqa: E501
 
+    def _update_fields(self, keys: Iterable) -> bool:
+        logging.info('self._update_fields(): running ...')
+        for key in keys:
+            self._fined_deal.update({key: self._current_deal.get(key)})  # type: ignore # noqa: E501
+        self._api('crm.deal.update', params=str(self._fined_deal))
+        logging.warning(self._bx_errors)
+        return self._bx_errors is not None
+
     def _update(
         self,
         entity: str = 'client',
         keys: Iterable = ('products', 'delivery_adress', 'delivery_date'),
-    ):
-        logging.info('self._update(): Updating client or deal ...')
+    ) -> bool:
+        logging.info(f'self._update(): Updating {entity} ...')
         if entity == 'client':
-            self._deal_exists() and self._update('deal') or self._create('deal')  # noqa: E501
-        elif entity == 'deal':  # recursion: stack 2 (deal exists)
-            self._equiualent(keys)
+            success_or_not = self._deal_exists() and self._update('deal') or self._create('deal')  # noqa: E501
+        elif entity == 'deal':
+            (eq := self._equiualent(keys)) or (up := self._update_fields(keys))
+            success_or_not = eq or not(eq ^ up)
+        return success_or_not
 
-    def _create(self, entity: str = 'client'):
-        logging.info('self._create(): Creating new client with deal ...')
+    def _create(self, entity: str = 'client') -> bool:
+        logging.info(f'self._create(): Creating new {entity} ...')
         if entity == 'client':
             self._bind_client_with_deal()
             self._api('crm.contact.add', params=str(self._client_with_deal))  # noqa: E501
         self._api('crm.deal.add', params=str(self._current_deal))
+        return self._bx_errors is None
 
-    def create_or_update(self):
-        self._clent_exists() and self._update() or self._create()
+    def create_or_update(self) -> Optional[Union[bool, dict]]:
+        return self._clent_exists() and self._update() or self._create() or self._bx_errors  # noqa: E501

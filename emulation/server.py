@@ -106,6 +106,33 @@ class LocalBitrix(ServiceBase):
         logging.info(f'crm_deal_add({params=}) -> {deal_list_updated}\n')
         return deal_list_updated
 
+    @rpc(String, _returns=String)
+    def crm_deal_update(ctx, params: str) -> str:
+        logging.info('Server: crm.deal.update running ...')
+
+        deal_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+            LocalBitrix.CRM_DEALS,
+            data=None,
+            mode='r',
+            method='read',
+        ))
+
+        updated_deal = literal_eval(params)
+        for index, deal in enumerate(deal_list.get('deal')):  # type: ignore
+            if deal.get('delivery_code') == updated_deal['delivery_code']:
+                deal_list.get('deal', [])[index] = updated_deal
+
+        characters_number = LocalBitrix.data(
+            LocalBitrix.CRM_DEALS,
+            data=json.dumps(deal_list),
+            mode='w',
+            method='write',
+        )
+        assert isinstance(characters_number, int)
+
+        logging.info(f'crm_deal_update({params=}) -> {deal_list}\n')
+        return json.dumps(deal_list)
+
 
 app = Application(
     [LocalBitrix],
