@@ -133,6 +133,33 @@ class LocalBitrix(ServiceBase):
         logging.info(f'crm_deal_update({params=}) -> {deal_list}\n')
         return json.dumps(deal_list)
 
+    @rpc(String, _returns=String)
+    def crm_contact_update(ctx, params: str) -> str:
+        logging.info('Server: crm.contact.update running ...')
+
+        contacts_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+            LocalBitrix.CRM_CONTACTS,
+            data=None,
+            mode='r',
+            method='read',
+        ))
+
+        updated_contact = literal_eval(params)
+        for contact in contacts_list.get('contacts'):  # type: ignore
+            if contact['name'] == updated_contact['name']:
+                contact.update(updated_contact)
+
+        characters_number = LocalBitrix.data(
+            LocalBitrix.CRM_CONTACTS,
+            data=json.dumps(contacts_list),
+            mode='w',
+            method='write',
+        )
+        assert isinstance(characters_number, int)
+
+        logging.info(f'crm_contact_update({params=}) -> {contacts_list}\n')
+        return json.dumps(contacts_list)
+
 
 app = Application(
     [LocalBitrix],

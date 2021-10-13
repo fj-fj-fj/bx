@@ -63,9 +63,13 @@ class CRM:
     def _check_errors(self) -> bool:
         return self._bx_responce and 'error' in self._bx_responce.keys()  # type: ignore # noqa: E501
 
-    def _bind_client_with_deal(self):
-        self._client_with_deal = deepcopy(self._current_deal.get('client'))
-        self._client_with_deal['deal'] = self._current_deal['delivery_code']
+    def _bind_client_with_deal(self, client_exist: bool = False):
+        if client_exist:
+            self._current_client['deal'].append(self._current_deal['delivery_code'])  # type: ignore # noqa: E501
+        else:
+            self._client_with_deal = deepcopy(self._current_deal.get('client'))
+            self._client_with_deal['deal'] = self._client_with_deal.get('deal', [])  # type: ignore # noqa: E501
+            self._client_with_deal['deal'].append(self._current_deal['delivery_code'])  # type: ignore # noqa: E501
 
     def _equiualent(self, keys: Iterable) -> bool:
         return all([self._fined_deal[k] == self._current_deal[k] for k in keys])  # type: ignore # noqa: E501
@@ -80,15 +84,19 @@ class CRM:
 
     def _update(
         self,
-        entity: str = 'client',
+        entity: str = 'None',
         keys: Iterable = ('products', 'delivery_adress', 'delivery_date'),
     ) -> bool:
         logging.info(f'self._update(): Updating {entity} ...')
-        if entity == 'client':
+        if entity == 'None':
             success_or_not = self._deal_exists() and self._update('deal') or self._create('deal')  # noqa: E501
         elif entity == 'deal':
             (eq := self._equiualent(keys)) or (up := self._update_fields(keys))
             success_or_not = eq or not(eq ^ up)
+        elif entity == 'client':
+            self._bind_client_with_deal(client_exist=True)
+            self._api('crm.contact.update', params=str(self._current_client))  # noqa: E501
+            success_or_not = self._bx_errors is None
         return success_or_not
 
     def _create(self, entity: str = 'client') -> bool:
@@ -96,6 +104,8 @@ class CRM:
         if entity == 'client':
             self._bind_client_with_deal()
             self._api('crm.contact.add', params=str(self._client_with_deal))  # noqa: E501
+        elif entity == 'deal':
+            self._update('client')
         self._api('crm.deal.add', params=str(self._current_deal))
         return self._bx_errors is None
 

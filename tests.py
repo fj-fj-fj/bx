@@ -8,7 +8,7 @@ import requests
 unittest.TestLoader.sortTestMethodsUsing = lambda *args: -1
 
 
-class FuntionalTest(unittest.TestCase):
+class FunctionalTest(unittest.TestCase):
 
     def setUp(self):
         self.url = 'http://127.0.0.1:5000/'
@@ -52,7 +52,9 @@ class FuntionalTest(unittest.TestCase):
                 {
                     "id": 1,
                     **post_data['client'],
-                    "deal": "#232nkF3fAdn"
+                    "deal": [
+                        "#232nkF3fAdn"
+                    ]
                 }
             ]
         })
@@ -102,7 +104,9 @@ class FuntionalTest(unittest.TestCase):
                 {
                     "id": 1,
                     **post_data['client'],
-                    "deal": "#232nkF3fAdn"
+                    "deal": [
+                        "#232nkF3fAdn"
+                    ]
                 }
             ]
         })
@@ -160,7 +164,9 @@ class FuntionalTest(unittest.TestCase):
                 {
                     "id": 1,
                     **old_deal['client'],
-                    "deal": "#232nkF3fAdn"
+                    "deal": [
+                        "#232nkF3fAdn"
+                    ]
                 }
             ]
         })
@@ -217,13 +223,207 @@ class FuntionalTest(unittest.TestCase):
             deal_updated_success = f.read()
         self.assertEqual(deal_updated_success, expected_updated_deal_list)
 
+    def test_create_second_client_with_deal(self):
+        """
+        Client "fj" doesn't exist.
+        Creation of "fj" and his deal.
+        Creation of "Contact-Deal" relationship.
+        crm.contact.list has "Jon" and "fj" clients.
+        """
+
+        with open('emulation/crm/contacts/list.json') as f_contacts, \
+            open('emulation/crm/deal/list.json') as f_deal:  # noqa: E125
+            one_client_jon = f_contacts.read()
+            one_deal_jon = f_deal.read()
+
+        expected_one_client_jon = json.dumps({
+            "contacts": [
+                {
+                    "id": 1,
+                    "name": "Jon",
+                    "surname": "Karter",
+                    "phone": "+77777777777",
+                    "adress": "st. Mira, 287, Moscow",
+                    "deal": [
+                        "#232nkF3fAdn"
+                    ]
+                }
+            ]
+        })
+
+        self.assertEqual(one_client_jon, expected_one_client_jon)
+
+        expected_one_deal_jon = json.dumps({
+            "deal": [
+                {
+                    "id": 1,
+                    "title": "title",
+                    "description": "Some description",
+                    "client": {
+                        "name": "Jon",
+                        "surname": "Karter",
+                        "phone": "+77777777777",
+                        "adress": "st. Mira, 287, Moscow"
+                    },
+                    "products": ["Candy", "Carrot", "Potato", "Cheese"],
+                    "delivery_adress": "st. Mira, 221, Ekaterinburg",
+                    "delivery_date": "2021-01-01:20:00",
+                    "delivery_code": "#232nkF3fAdn"
+                }
+            ]
+        })
+        self.assertEqual(one_deal_jon, expected_one_deal_jon)
+
+        new_client_data = {
+            "title": "title",
+            "description": "Some description",
+            "client": {
+                "name": "fj",
+                "surname": "fj",
+                "phone": "+66677777777",
+                "adress": "Forks"
+            },
+            "products": ["Wine", "Coffee", "Fresh Blood"],
+            "delivery_adress": "st. Mira, 212, Ekaterinburg",
+            "delivery_date": "2021-01-02:00:00",
+            "delivery_code": "#232nkF3ffoo"
+        }
+
+        requests.post(self.url, json=new_client_data)
+
+        with open('emulation/crm/contacts/list.json') as f:
+            contact_list_two_clients = f.read()
+
+        expected_two_clients = json.dumps({
+            "contacts": [
+                {
+                    "id": 1,
+                    "name": "Jon",
+                    "surname": "Karter",
+                    "phone": "+77777777777",
+                    "adress": "st. Mira, 287, Moscow",
+                    "deal": [
+                        "#232nkF3fAdn"
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "fj",
+                    "surname": "fj",
+                    "phone": "+66677777777",
+                    "adress": "Forks",
+                    "deal": [
+                        "#232nkF3ffoo"
+                    ]
+                }
+            ]
+        })
+        self.assertEqual(contact_list_two_clients, expected_two_clients)
+
+        with open('emulation/crm/deal/list.json') as f:
+            two_deals = f.read()
+
+        expected_two_deals = json.dumps({
+            "deal": [
+                {
+                    "id": 1,
+                    "title": "title",
+                    "description": "Some description",
+                    "client": {
+                        "name": "Jon",
+                        "surname": "Karter",
+                        "phone": "+77777777777",
+                        "adress": "st. Mira, 287, Moscow"
+                    },
+                    "products": ["Candy", "Carrot", "Potato", "Cheese"],
+                    "delivery_adress": "st. Mira, 221, Ekaterinburg",
+                    "delivery_date": "2021-01-01:20:00",
+                    "delivery_code": "#232nkF3fAdn"
+                },
+                {
+                    "id": 2,
+                    "title": "title",
+                    "description": "Some description",
+                    "client": {
+                        "name": "fj",
+                        "surname": "fj",
+                        "phone": "+66677777777",
+                        "adress": "Forks"
+                    },
+                    "products": ["Wine", "Coffee", "Fresh Blood"],
+                    "delivery_adress": "st. Mira, 212, Ekaterinburg",
+                    "delivery_date": "2021-01-02:00:00",
+                    "delivery_code": "#232nkF3ffoo"
+                }
+            ]
+        })
+        self.assertEqual(two_deals, expected_two_deals)
+
+    def test_add_deal(self):
+        """
+        Clients "Jon" and "fj" are exist.
+        Adding new deal with "Jon".
+        crm.contacts.list: Jon has 2 deals, fj has 1 deal.
+        crm.deal.list has 3 deals.
+        """
+
+        with open('emulation/crm/contacts/list.json') as f_contacts, \
+            open('emulation/crm/deal/list.json') as f_deal:  # noqa: E125
+            two_clients_with_one_deal = f_contacts.read()
+            two_deals = f_deal.read()
+
+        Jon, fj = eval(two_clients_with_one_deal)['contacts']
+        count_deal_jon = len(Jon['deal'])
+        count_deal_fj = len(fj['deal'])
+        self.assertEqual(count_deal_jon, 1)
+        self.assertEqual(count_deal_fj, 1)
+
+        deal_jon, deal_fj = eval(two_deals)['deal']
+        self.assertEqual(deal_jon['delivery_code'], '#232nkF3fAdn')
+        self.assertEqual(deal_fj['delivery_code'], '#232nkF3ffoo')
+
+        new_deal_from_jon = {
+            "title": "title",
+            "description": "Some description",
+            "client": {
+                "name": "Jon",
+                "surname": "Karter",
+                "phone": "+77777777777",
+                "adress": "st. Mira, 287, Moscow"
+            },
+            "products": ["Milk"],
+            "delivery_adress": "st. Mira, 211, Ekaterinburg",
+            "delivery_date": "2021-01-01:16:00",
+            "delivery_code": "#232nkF3fbar"
+        }
+
+        requests.post(self.url, json=new_deal_from_jon)
+
+        with open('emulation/crm/contacts/list.json') as f_contacts, \
+            open('emulation/crm/deal/list.json') as f_deal:  # noqa: E125
+            two_clients_with_one_deal = f_contacts.read()
+            two_deals = f_deal.read()
+
+        Jon, fj = eval(two_clients_with_one_deal)['contacts']
+        count_deal_jon = len(Jon['deal'])
+        count_deal_fj = len(fj['deal'])
+        self.assertEqual(count_deal_jon, 2)
+        self.assertEqual(count_deal_fj, 1)
+
+        deal_jon_1, deal_fj, deal_jon_2 = eval(two_deals)['deal']
+        self.assertEqual(deal_jon_1['delivery_code'], '#232nkF3fAdn')
+        self.assertEqual(deal_fj['delivery_code'], '#232nkF3ffoo')
+        self.assertEqual(deal_jon_2['delivery_code'], '#232nkF3fbar')
+
 
 def suite():
     """Create a callable test-suite generation added in desired order."""
     suite = unittest.TestSuite()
-    suite.addTest(FuntionalTest('test_create_new_client_with_new_deal'))
-    suite.addTest(FuntionalTest('test_no_action_because_client_and_deal_exist'))  # noqa: E501
-    suite.addTest(FuntionalTest('test_update_deal'))
+    suite.addTest(FunctionalTest('test_create_new_client_with_new_deal'))
+    suite.addTest(FunctionalTest('test_no_action_because_client_and_deal_exist'))  # noqa: E501
+    suite.addTest(FunctionalTest('test_update_deal'))
+    suite.addTest(FunctionalTest('test_create_second_client_with_deal'))
+    suite.addTest(FunctionalTest('test_add_deal'))
     return suite
 
 
