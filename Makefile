@@ -28,7 +28,7 @@ run: ## Run Flask app.
 r: update_log ## Update logs and start program with `LocalBitrix`(api emulation).
 	make soap run
 
-clean: ## Returns emulation/scm/**/list.json files to its original state.
+clean1 clean2 &: ## Returns emulation/scm/**/list.json files to its original state.
 	@$(PYTHON) -c "file1, file2 = 'emulation/crm/contacts/list.json', 'emulation/crm/deal/list.json';\
 	f1,f2 = open(file1, 'w'),open(file2, 'w'); f1.write('{\"contacts\":[]}\n'); f2.write('{\"deal\":[]}\n')"
 
@@ -53,10 +53,10 @@ kill_all: ## Kill Soap server and Flask app.
 reload: ## Reload Flask app.
 	make kill_all r
 
-retest: clean ## Clear logs and other data and restart tests.
+retest: clean1 ## Clear logs and other data and restart tests.
 	make kill_all t
 
-git: check retest clean ## make git m="message"
+git: check retest clean2 ## make git m="message"
 	git add .
 	git commit -m "$m"
 	git push -u origin main
