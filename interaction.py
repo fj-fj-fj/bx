@@ -1,5 +1,6 @@
 import json
 import logging
+from copy import deepcopy
 from typing import Optional, Union
 
 from fast_bitrix24 import Bitrix as true_bx  # type: ignore
@@ -23,6 +24,8 @@ class CRM:
         self._current_client: Optional[dict] = None
         # will be setted in self._deal_exists()
         self._delivery_code: Optional[str] = None
+        # will be setted in self._bind_client_with_deal()
+        self._client_with_deal: Optional[dict] = None
 
     def _clent_exists(self, action: str = 'crm.contact.list') -> bool:
         self._client_name = self._current_deal.get('client', {}).get('name')
@@ -57,9 +60,15 @@ class CRM:
     def _check_errors(self) -> bool:
         return self._bx_responce and 'error' in self._bx_responce.keys()  # type: ignore # noqa: E501
 
-    def _create(self):
+    def _bind_client_with_deal(self):
+        self._client_with_deal = deepcopy(self._current_deal.get('client'))
+        self._client_with_deal['deal'] = self._current_deal['delivery_code']
+
+    def _create(self, entity: str = 'client'):
         logging.info('self._create(): Creating new client with deal ...')
-        self._api('crm.contact.add', params=str(self._current_deal.get('client')))  # noqa: E501
+        if entity == 'client':
+            self._bind_client_with_deal()
+            self._api('crm.contact.add', params=str(self._client_with_deal))  # noqa: E501
         self._api('crm.deal.add', params=str(self._current_deal))
 
     def _update(self):

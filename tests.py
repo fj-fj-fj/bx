@@ -8,6 +8,7 @@ class Test(unittest.TestCase):
 
     def setUp(self):
         self.url = 'http://127.0.0.1:5000/'
+        self.assertEqual.__self__.maxDiff = None
 
     def test_create_client_with_deal(self):
 
@@ -42,7 +43,8 @@ class Test(unittest.TestCase):
             "contacts": [
                 {
                     "id": 1,
-                    **post_data['client']
+                    **post_data['client'],
+                    "deal": "#232nkF3fAdn"
                 }
             ]
         })
