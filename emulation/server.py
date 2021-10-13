@@ -1,6 +1,7 @@
 import json
 import logging
 from ast import literal_eval
+from typing import Optional, Union
 
 from spyne import Application, rpc, ServiceBase, String  # type: ignore
 from spyne.protocol.soap import Soap11  # type: ignore
@@ -20,14 +21,14 @@ class LocalBitrix(ServiceBase):
         return json.dumps(crm_list)
 
     @staticmethod
-    def data(file: str, data, mode: str, method: str) -> str:
+    def data(file: str, data: Optional[str], mode: str, method: str) -> Union[str, int]:  # noqa: E501
         with open(file, mode) as f:
             return getattr(f, method)(data)
 
     @rpc(String, _returns=String)
     def crm_contact_list(ctx, params: str) -> str:
         logging.info('Server: crm.contact.list running ...')
-        contacts_list: str = LocalBitrix.data(
+        contacts_list: str = LocalBitrix.data(  # type: ignore
             LocalBitrix.CRM_CONTACTS,
             data=None,
             mode='r',
@@ -40,7 +41,7 @@ class LocalBitrix(ServiceBase):
     def crm_contact_add(ctx, params: str) -> str:
         logging.info('Server: crm.contact.add running ...')
 
-        contacts_list: dict = json.loads(LocalBitrix.data(
+        contacts_list: dict = json.loads(LocalBitrix.data(  # type: ignore
             LocalBitrix.CRM_CONTACTS,
             data=None,
             mode='r',
@@ -68,7 +69,7 @@ class LocalBitrix(ServiceBase):
     def crm_deal_list(ctx, params: str) -> str:
         logging.info('Server: crm.deal.list running ...')
 
-        deal_list: str = LocalBitrix.data(
+        deal_list: str = LocalBitrix.data(  # type: ignore
             LocalBitrix.CRM_DEALS,
             data=None,
             mode='r',
@@ -81,7 +82,7 @@ class LocalBitrix(ServiceBase):
     def crm_deal_add(ctx, params: str) -> str:
         logging.info('Server: crm.deal.add running ...')
 
-        deal_list: dict = json.loads(LocalBitrix.data(
+        deal_list: dict = json.loads(LocalBitrix.data(  # type: ignore
             LocalBitrix.CRM_DEALS,
             data=None,
             mode='r',
