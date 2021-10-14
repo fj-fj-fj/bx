@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from fast_bitrix24 import Bitrix  # type: ignore
 from flask import Flask, request
 

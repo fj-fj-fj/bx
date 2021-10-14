@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os
 
 # https://github.com/leshchenko1979/fast_bitrix24
