@@ -1,4 +1,5 @@
 import json
+import logging
 import unittest
 import re
 from datetime import datetime
@@ -21,6 +22,14 @@ def replace_minutes_and_seconds(timestamp: str) -> str:
     '2021-10-14T16****+03:00'
     """
     return timestamp.replace(re.findall(':\d*:\d*\+', timestamp)[0], '****+')  # noqa: W605 E501
+
+
+def configure_logging(file: str = 'interaction.log', lvl: int = logging.INFO):
+    logger = logging.getLogger(name='root')
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler(file)
+    fh.setLevel(lvl)
+    logger.addHandler(fh)
 
 
 class FunctionalTest(unittest.TestCase):
@@ -431,8 +440,16 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(deal_jon_2['delivery_code'], '#232nkF3fbar')
 
     def test_update_currency(self):
+        """
+        "www.cbr-xml-daily.ru/daily_json.js GET" request.
+        Updating all valutes in Bitrix.
+        """
         from interaction import CRM
         from settings import BX_URL, get_webhook, get_bx_valutes
+
+        # Add logs into interaction.log
+        # because `CRM._update('currency)` will be called manually.
+        configure_logging()
 
         crm = CRM(get_webhook(BX_URL), {})._update('currency')
         self.assertEqual(crm, True)
@@ -444,6 +461,12 @@ class FunctionalTest(unittest.TestCase):
 
         cbr_timestamp = replace_minutes_and_seconds(row_data['Timestamp'])
         now_timestamp = replace_minutes_and_seconds(get_now_timestamp())
+        # Sometimes there may be such a problem:
+        # - 2021-10-14T22****+03:00
+        # ?             ^
+        # + 2021-10-14T23****+03:00
+        # ?             ^
+        # Just restart in a minute :)
         self.assertEqual(cbr_timestamp, now_timestamp)
 
         # 1
