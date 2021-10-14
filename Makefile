@@ -1,7 +1,11 @@
 PYTHON := python3
+APP_NAME := bx24
 APP_LOG := interaction.log
 SOAP_LOG := emulation/server.log
 COMMON_LOG := common.save.log
+
+help: # This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 soap: ## Bitrix API emulation.
 	nohup $(PYTHON) emulation/server.py >> $(SOAP_LOG) &
@@ -65,5 +69,22 @@ git: check retest clean2 ## make git m="message"
 	git commit -m "$m"
 	git push -u origin main
 
-warnings:
+warnings:  ## Check dev artifacts.
 	grep --color="always" --include="*.py" -i -r -n -w . -e 'print\|fixme\|refactorme'
+
+docker_start: ## Docker start if Docker not starting.
+	sudo service docker status > /dev/null || sudo service docker start
+
+docker_build: ## Build the container.
+	docker build -t $(APP_NAME) .
+
+docker_run:  # ## Run Docker container.
+	docker run -i -t --rm --name "$(APP_NAME)" $(APP_NAME)
+
+build_nc: ## Build the container without caching.
+	docker build --no-cache -t $(APP_NAME) .
+
+up: docker_start docker_build docker_run ## Build and run Dockerfile with one command.
+
+stop: ## Stop and remove a running container.
+	docker stop $(APP_NAME); docker rm $(APP_NAME)

@@ -1,0 +1,10 @@
+.git
+
+__pycache__
+py[cod]
+
+.mypy_cache
+
+.envrc
+*.log
+data/

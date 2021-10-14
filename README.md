@@ -43,3 +43,16 @@ $ # Для более подробной информации, прочтите 
 $ # Отправьте данные через Postman или вручную*
 ```
 `*` Структуру отправляемых данных можно посмотреть в [tests.py](tests.py) в `post_data`.  
+
+#
+## Установка
+```bash
+$ git clone https://github.com/fj-fj-fj/bx.git && cd bx
+```
+
+## Docker
+```bash
+$ docker build . --tag <image_name>
+$ docker run --port 8001:8001 <image_name>
+$ # Или используйте make цели (e.g., make up)
+```
