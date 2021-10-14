@@ -60,3 +60,6 @@ git: check retest clean2 ## make git m="message"
 	git add .
 	git commit -m "$m"
 	git push -u origin main
+
+warnings:
+	grep --color="always" --include="*.py" -i -r -n -w . -e 'print\|fixme\|refactorme'

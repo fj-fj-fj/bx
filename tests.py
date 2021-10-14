@@ -1,11 +1,26 @@
 import json
 import unittest
+import re
+from datetime import datetime
 
 import requests
 
 # Unittest tests order.
 # https://stackoverflow.com/questions/4095319/unittest-tests-order#comment120033036_22317851
 unittest.TestLoader.sortTestMethodsUsing = lambda *args: -1
+
+
+def get_now_timestamp():
+    """UTC to ISO 8601 with Local TimeZone information without microsecond."""
+    return datetime.now().astimezone().replace(microsecond=0).isoformat()
+
+
+def replace_minutes_and_seconds(timestamp: str) -> str:
+    """
+    >>> replace_minutes('2021-10-14T16:14:29+03:00')
+    '2021-10-14T16****+03:00'
+    """
+    return timestamp.replace(re.findall(':\d*:\d*\+', timestamp)[0], '****+')  # noqa: W605 E501
 
 
 class FunctionalTest(unittest.TestCase):
@@ -415,6 +430,32 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(deal_fj['delivery_code'], '#232nkF3ffoo')
         self.assertEqual(deal_jon_2['delivery_code'], '#232nkF3fbar')
 
+    def test_update_currency(self):
+        from interaction import CRM
+        from settings import BX_URL, get_webhook, get_bx_valutes
+
+        crm = CRM(get_webhook(BX_URL), {})._update('currency')
+        self.assertEqual(crm, True)
+
+        with open('emulation/crm/currency/update.json') as file_clean_data, \
+            open('data/daily.json') as file_row_data:  # noqa: E125
+            clean_data = json.loads(file_clean_data.read())
+            row_data = json.loads(file_row_data.read())
+
+        cbr_timestamp = replace_minutes_and_seconds(row_data['Timestamp'])
+        now_timestamp = replace_minutes_and_seconds(get_now_timestamp())
+        self.assertEqual(cbr_timestamp, now_timestamp)
+
+        # 1
+        bx_usd_id = get_bx_valutes()['USD']
+        # {'id': <id>, 'fields': {'Valute': <value>}}
+        bx_usd = [v for v in clean_data['valutes'] if v['id'] == bx_usd_id][0]
+        # <value>
+        bx_usd_value = bx_usd['fields']['Valute']
+        # <value>
+        cbr_usd_value = row_data['Valute']['USD']['Value']
+        self.assertEqual(cbr_usd_value, bx_usd_value)
+
 
 def suite():
     """Create a callable test-suite generation added in desired order."""
@@ -424,6 +465,7 @@ def suite():
     suite.addTest(FunctionalTest('test_update_deal'))
     suite.addTest(FunctionalTest('test_create_second_client_with_deal'))
     suite.addTest(FunctionalTest('test_add_deal'))
+    suite.addTest(FunctionalTest('test_update_currency'))
     return suite
 
 

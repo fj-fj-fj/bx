@@ -12,6 +12,7 @@ class LocalBitrix(ServiceBase):
 
     CRM_CONTACTS = 'emulation/crm/contacts/list.json'
     CRM_DEALS = 'emulation/crm/deal/list.json'
+    VALUTES = 'emulation/crm/currency/update.json'
 
     @staticmethod
     def add(crm_list: dict, key: str, params: str) -> str:
@@ -159,6 +160,21 @@ class LocalBitrix(ServiceBase):
 
         logging.info(f'crm_contact_update({params=}) -> {contacts_list}\n')
         return json.dumps(contacts_list)
+
+    @rpc(String, _returns=String)
+    def crm_currency_update(ctx, params: str) -> str:
+        logging.info('Server: rate running ...')
+
+        characters_number = LocalBitrix.data(  # type: ignore
+            LocalBitrix.VALUTES,
+            data=params,
+            mode='w',
+            method='write',
+        )
+        assert isinstance(characters_number, int)
+
+        logging.info(f'rate({params=}) -> {params=}\n')
+        return params
 
 
 app = Application(
