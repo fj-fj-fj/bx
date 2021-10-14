@@ -1,7 +1,10 @@
 PYTHON := python3
+APP_LOG := interaction.log
+SOAP_LOG := emulation/server.log
+COMMON_LOG := common.save.log
 
 soap: ## Bitrix API emulation.
-	nohup $(PYTHON) emulation/server.py >> emulation/server.log &
+	nohup $(PYTHON) emulation/server.py >> $(SOAP_LOG) &
 
 show_soap_methods: ## Shows `LocalBitrix` methods.
 	$(PYTHON) emulation/client.py
@@ -19,11 +22,12 @@ check: ## Check styles and types.
 	make style typos
 
 update_log: ## Dupm all logs into common.save.log and clean up.
-	@cat emulation/server.log app.log >> common.save.log \
-	&& >app.log && >emulation/server.log
+	@test -f $(APP_LOG) || touch $(APP_LOG)
+	@test -f $(SOAP_LOG) || touch $(SOAP_LOG)
+	@cat $(APP_LOG) $(SOAP_LOG) >> $(COMMON_LOG) && >$(APP_LOG) && >$(SOAP_LOG)
 
 run: ## Run Flask app.
-	nohup $(PYTHON) app.py >> app.log &
+	nohup $(PYTHON) app.py >> $(APP_LOG) &
 
 r: update_log ## Update logs and start program with `LocalBitrix`(api emulation).
 	make soap run
