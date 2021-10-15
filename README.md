@@ -26,33 +26,56 @@
 Посмтореть алгоритм можно в [interaction.log](interaction.log)  
 
 #
-## Использование
-
+## Зависимости
 ```bash
-$ python3 -m venv .venv
-$ . .venv/bin/activate
-
-$ # Запустите soap сервер и приложение Flask:
-$ make soap run
-$ # Проверьте, работает ли все
-$ # (port 5000: Flask, port 8000: Soap):
-$ make check_connects
-$ # Запустите тесты:
-$ make test
-$ # Для более подробной информации, прочтите Makefile.
-$ # Отправьте данные через Postman или вручную*
+$ sudo apt-get update && sudo apt-get install direnv
+$ echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+$ source .bashrc
+$ # Или просто установите переменные из .envrc.sample
 ```
-`*` Структуру отправляемых данных можно посмотреть в [tests.py](tests.py) в `post_data`.  
 
 #
 ## Установка
 ```bash
 $ git clone https://github.com/fj-fj-fj/bx.git && cd bx
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -U pip && pip install -r requirements.txt
+$ # Если direnv был установлен:
+$ mv .envrc.sample .envrc
+$ direnv allow
 ```
+
+#
+## Использование
+
+```bash
+$ # Запустите SOAP сервер и приложение Flask:
+$ make soap run
+$ # Проверьте, работает ли все
+$ # (port 5000: Flask, port 8000: SOAP):
+$ make check_connects
+$ # Запустите тесты:
+$ make test
+$ # Для более подробнго управления, прочтите Makefile.
+$ # Отправьте данные через Postman или вручную*
+```
+`*` Структуру отправляемых данных можно посмотреть в [tests.py](tests.py) в `post_data`.  
 
 ## Docker
 ```bash
-$ docker build . --tag <image_name>
-$ docker run --port 8001:8001 <image_name>
+$ sudo service docker start
+$ docker build . --tag $(APP_NAME)
+$ docker run --detach --tty --rm \
+	--env WSDL_URL \
+	--env BITRIX_EMULATION \
+	--env CBR_URL \
+	--env COMPANY \
+	--env USER_ID \
+	--env SECRET_TOKEN \
+	--env FLASK_APP \
+	--env FLASK_DEBUG \
+	--env FLASK_ENV \
+	--name "$(APP_NAME)" $(APP_NAME)
 $ # Или используйте make цели (e.g., make up)
 ```

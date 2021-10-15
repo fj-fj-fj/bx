@@ -25,7 +25,7 @@ typos: ## Check types with mypy.
 check: ## Check styles and types.
 	make style typos
 
-update_log: ## Dupm all logs into common.save.log and clean up.
+update_log: ## Dump all logs into common.save.log and clean up.
 	@test -f $(APP_LOG) || touch $(APP_LOG)
 	@test -f $(SOAP_LOG) || touch $(SOAP_LOG)
 	@cat $(APP_LOG) $(SOAP_LOG) >> $(COMMON_LOG) && >$(APP_LOG) && >$(SOAP_LOG)
@@ -75,16 +75,32 @@ warnings:  ## Check dev artifacts.
 docker_start: ## Docker start if Docker not starting.
 	sudo service docker status > /dev/null || sudo service docker start
 
-docker_build: ## Build the container.
-	docker build -t $(APP_NAME) .
+docker_build: ## Build the container with `APP_NAME` tag.
+	docker build --tag $(APP_NAME) .
 
-docker_run:  # ## Run Docker container.
-	docker run -i -t --rm --name "$(APP_NAME)" $(APP_NAME)
+docker_build_nc: ## Build the container without caching.
+	docker build --no-cache --tag $(APP_NAME) .
 
-build_nc: ## Build the container without caching.
-	docker build --no-cache -t $(APP_NAME) .
+# --detach, -t - Run container in background and print container ID.
+# --tty, -t - Allocate a pseudo-TTY.
+# --rm - Automatically remove the container when it exits.
+docker_run:  ## Run (-dt --rm) Docker container with environment variables.
+	docker run --detach --tty --rm \
+	--env WSDL_URL \
+	--env BITRIX_EMULATION \
+	--env CBR_URL \
+	--env COMPANY \
+	--env USER_ID \
+	--env SECRET_TOKEN \
+	--env FLASK_APP \
+	--env FLASK_DEBUG \
+	--env FLASK_ENV \
+	--name "$(APP_NAME)" $(APP_NAME)
+
+docker_bash: ## Execute an interactive bash shell on the container.
+	docker exec -it $(APP_NAME) /bin/bash
 
 up: docker_start docker_build docker_run ## Build and run Dockerfile with one command.
 
-stop: ## Stop and remove a running container.
+docker_rm: ## Stop and remove a running container.
 	docker stop $(APP_NAME); docker rm $(APP_NAME)

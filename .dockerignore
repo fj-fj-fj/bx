@@ -5,6 +5,8 @@ py[cod]
 
 .mypy_cache
 
-.envrc
+.envrc*
+.python-verion
 *.log
+Dockerfile
 data/

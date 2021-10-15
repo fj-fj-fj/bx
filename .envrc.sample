@@ -1,17 +1,24 @@
-# To use VIRTUAL_ENV see direnv documentation
-export VIRTUAL_ENV=../.venv
-layout python-venv
+# This is a sample .envrc file for use in local development.
+# - https://direnv.net/
+# - https://github.com/direnv/direnv/wiki/Python
+# Rename this file as .envrc in the root of the project.
 
+# SOAP server URL (Bitrix emulation):
 export WSDL_URL=http://localhost:8000/?wsdl
 
+# CBR URL (currency rates):
 export CBR_URL=https://www.cbr-xml-daily.ru/daily_json.js
 
-export COMPANY=<yout_company_name>
-export USER_ID=<your_user_id>
-export SECRET_TOKEN='<your_secret_token'
+# Bitrix URL:
+# Update the environment variables to match your desired config
+export COMPANY=company_name
+export USER_ID=user_id
+export SECRET_TOKEN='secret_token'
+
 # To use emulation/server.py:
 export BITRIX_EMULATION=1
 
+# App configurations:
 export FLASK_DEBUG=true
 export FLASK_ENV=development
 export FLASK_APP=app
