@@ -5,9 +5,9 @@ import logging
 from ast import literal_eval
 from typing import Optional, Union
 
-from spyne import Application, rpc, ServiceBase, String  # type: ignore
-from spyne.protocol.soap import Soap11  # type: ignore
-from spyne.server.wsgi import WsgiApplication  # type: ignore
+from spyne import Application, rpc, ServiceBase, String
+from spyne.protocol.soap import Soap11
+from spyne.server.wsgi import WsgiApplication
 
 
 class LocalBitrix(ServiceBase):
@@ -24,19 +24,21 @@ class LocalBitrix(ServiceBase):
         return json.dumps(crm_list)
 
     @staticmethod
-    def data(file: str, data: Optional[str], mode: str, method: str) -> Union[str, int]:  # noqa: E501
+    def data(file: str, data: Optional[str], mode: str, method: str) -> Union[str, int]:
         with open(file, mode) as f:
             return getattr(f, method)(data)
 
     @rpc(String, _returns=String)
     def crm_contact_list(ctx, params: str) -> str:
         logging.info('Server: crm.contact.list running ...')
-        contacts_list: str = LocalBitrix.data(  # type: ignore
+        contacts_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_CONTACTS,
             data=None,
             mode='r',
             method='read',
         )
+        assert isinstance(contacts_list, str)
+
         logging.info(f'crm_contact_list({params=}) -> {contacts_list}\n')
         return contacts_list
 
@@ -44,12 +46,14 @@ class LocalBitrix(ServiceBase):
     def crm_contact_add(ctx, params: str) -> str:
         logging.info('Server: crm.contact.add running ...')
 
-        contacts_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+        contacts_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_CONTACTS,
             data=None,
             mode='r',
             method='read',
-        ))
+        )
+        assert isinstance(contacts_list, str)
+        contacts_list: dict = json.loads(contacts_list)
 
         contacts_list_updated: str = LocalBitrix.add(
             contacts_list,
@@ -57,7 +61,7 @@ class LocalBitrix(ServiceBase):
             params=params
         )
 
-        characters_number = LocalBitrix.data(
+        characters_number: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_CONTACTS,
             data=contacts_list_updated,
             mode='w',
@@ -65,19 +69,21 @@ class LocalBitrix(ServiceBase):
         )
         assert isinstance(characters_number, int)
 
-        logging.info(f'crm_contact_add({params=}) -> {contacts_list_updated}\n')  # noqa: E501
+        logging.info(f'crm_contact_add({params=}) -> {contacts_list_updated}\n')
         return contacts_list_updated
 
     @rpc(String, _returns=String)
     def crm_deal_list(ctx, params: str) -> str:
         logging.info('Server: crm.deal.list running ...')
 
-        deal_list: str = LocalBitrix.data(  # type: ignore
+        deal_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_DEALS,
             data=None,
             mode='r',
             method='read',
         )
+        assert isinstance(deal_list, str)
+
         logging.info(f'crm_deal_list({params=}) -> {deal_list}\n')
         return deal_list
 
@@ -85,12 +91,14 @@ class LocalBitrix(ServiceBase):
     def crm_deal_add(ctx, params: str) -> str:
         logging.info('Server: crm.deal.add running ...')
 
-        deal_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+        deal_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_DEALS,
             data=None,
             mode='r',
             method='read',
-        ))
+        )
+        assert isinstance(deal_list, str)
+        deal_list: dict = json.loads(deal_list)
 
         deal_list_updated: str = LocalBitrix.add(
             deal_list,
@@ -98,7 +106,7 @@ class LocalBitrix(ServiceBase):
             params=params,
         )
 
-        characters_number = LocalBitrix.data(
+        characters_number: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_DEALS,
             data=deal_list_updated,
             mode='w',
@@ -113,19 +121,21 @@ class LocalBitrix(ServiceBase):
     def crm_deal_update(ctx, params: str) -> str:
         logging.info('Server: crm.deal.update running ...')
 
-        deal_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+        deal_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_DEALS,
             data=None,
             mode='r',
             method='read',
-        ))
+        )
+        assert isinstance(deal_list, str)
+        deal_list: dict = json.loads(deal_list)
 
         updated_deal = literal_eval(params)
-        for index, deal in enumerate(deal_list.get('deal')):  # type: ignore
+        for index, deal in enumerate(deal_list['deal']):
             if deal.get('delivery_code') == updated_deal['delivery_code']:
                 deal_list.get('deal', [])[index] = updated_deal
 
-        characters_number = LocalBitrix.data(
+        characters_number: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_DEALS,
             data=json.dumps(deal_list),
             mode='w',
@@ -140,19 +150,21 @@ class LocalBitrix(ServiceBase):
     def crm_contact_update(ctx, params: str) -> str:
         logging.info('Server: crm.contact.update running ...')
 
-        contacts_list: dict = json.loads(LocalBitrix.data(  # type: ignore
+        contacts_list: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_CONTACTS,
             data=None,
             mode='r',
             method='read',
-        ))
+        )
+        assert isinstance(contacts_list, str)
+        contacts_list: dict = json.loads(contacts_list)
 
         updated_contact = literal_eval(params)
-        for contact in contacts_list.get('contacts'):  # type: ignore
+        for contact in contacts_list['contacts']:
             if contact['name'] == updated_contact['name']:
                 contact.update(updated_contact)
 
-        characters_number = LocalBitrix.data(
+        characters_number: Union[str, int] = LocalBitrix.data(
             LocalBitrix.CRM_CONTACTS,
             data=json.dumps(contacts_list),
             mode='w',
@@ -167,7 +179,7 @@ class LocalBitrix(ServiceBase):
     def crm_currency_update(ctx, params: str) -> str:
         logging.info('Server: rate running ...')
 
-        characters_number = LocalBitrix.data(  # type: ignore
+        characters_number: Union[str, int] = LocalBitrix.data(
             LocalBitrix.VALUTES,
             data=params,
             mode='w',

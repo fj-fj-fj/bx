@@ -23,7 +23,7 @@ def replace_minutes_and_seconds(timestamp: str) -> str:
     >>> replace_minutes('2021-10-14T16:14:29+03:00')
     '2021-10-14T16****+03:00'
     """
-    return timestamp.replace(re.findall(':\d*:\d*\+', timestamp)[0], '****+')  # noqa: W605 E501
+    return timestamp.replace(re.findall(':\d*:\d*\+', timestamp)[0], '****+')  # noqa: W605
 
 
 def configure_logging(file: str = 'interaction.log', lvl: int = logging.INFO):
@@ -490,7 +490,7 @@ def suite():
     """Create a callable test-suite generation added in desired order."""
     suite = unittest.TestSuite()
     suite.addTest(FunctionalTest('test_create_new_client_with_new_deal'))
-    suite.addTest(FunctionalTest('test_no_action_because_client_and_deal_exist'))  # noqa: E501
+    suite.addTest(FunctionalTest('test_no_action_because_client_and_deal_exist'))
     suite.addTest(FunctionalTest('test_update_deal'))
     suite.addTest(FunctionalTest('test_create_second_client_with_deal'))
     suite.addTest(FunctionalTest('test_add_deal'))

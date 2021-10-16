@@ -22,18 +22,18 @@ class Bitrix:
             print(repr(e))
             os.system('make check_connections && code app.log')
 
-    def get_all(self, operation: str, params: Optional[str]) -> dict:  # type: ignore # noqa: E501
+    def get_all(self, operation: str, params: Optional[str]) -> str:
         logging.info(f'Bitrix.get_all({operation=}, {params=})')
         operation = operation.replace('.', '_')
+
         for service in self._client.wsdl.services.values():
             if service.name == 'LocalBitrix':
                 for port in service.ports.values():
                     for _operation in port.binding._operations.values():
                         if _operation.name == operation:
-                            return getattr(
-                                self._client.service,
-                                operation,
-                            )(params)
+                            return getattr(self._client.service, operation)(params)
+
+        return '{"error": "OperationError", "error_description": "Operation does not exist."}'
 
 
 if __name__ == '__main__':

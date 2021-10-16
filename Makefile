@@ -4,25 +4,34 @@ APP_LOG := interaction.log
 SOAP_LOG := emulation/server.log
 COMMON_LOG := common.save.log
 
+ifndef VERBOSE
+MAKEFLAGS += --no-print-directory
+endif
+
 help: # This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# `venv` sets the environment variable `$VIRTUAL_ENV` when activating an environment.
+# This only works when the environment is activated by the activate shell script.
+check_virtual_env: ## Determine if Python is running inside virtualenv.
+	@echo $${VIRTUAL_ENV?"[ERROR]: Virtual environment not activated!"}
 
 soap: ## Bitrix API emulation.
 	nohup $(PYTHON) emulation/server.py >> $(SOAP_LOG) &
 
-show_soap_methods: ## Shows `LocalBitrix` methods.
+show_soap_methods: ## Shows available Bitrix methods.
 	$(PYTHON) emulation/client.py
 
-app: ## Open root page in browser.
+browse: ## Open root page in browser (google-chrome).
 	nohup google-chrome http://127.0.0.1:5000/ >> chrome.log &
 
 style: ## Check styles with flake8.
-	flake8 .
+	flake8 --max-line-length=100 --exclude data .
 
 typos: ## Check types with mypy.
-	mypy .
+	mypy --allow-redefinition --ignore-missing-imports --exclude data .
 
-check: ## Check styles and types.
+check: check_virtual_env ## Check styles and types.
 	make style typos
 
 update_log: ## Dump all logs into common.save.log and clean up.
@@ -33,15 +42,24 @@ update_log: ## Dump all logs into common.save.log and clean up.
 run: ## Run Flask app.
 	nohup $(PYTHON) app.py >> $(APP_LOG) &
 
-r: update_log ## Update logs and start program with `LocalBitrix`(api emulation).
+r: check_virtual_env update_log ## Update logs, start Bitrix emulation and app.
 	make soap run
 
 clean1 clean2 &: ## Returns emulation/scm/**/list.json files to its original state.
 	@$(PYTHON) -c "file1, file2 = 'emulation/crm/contacts/list.json', 'emulation/crm/deal/list.json';\
 	f1,f2 = open(file1, 'w'),open(file2, 'w'); f1.write('{\"contacts\":[]}\n'); f2.write('{\"deal\":[]}\n')"
 
-test: ## Run tests (Flask running).
-	$(PYTHON) tests.py
+clean_pyc: ## Clean up old *.py[cod] files.
+	find -name \*.py[cod] -print0 | xargs -0 rm -f
+
+# WARNING: Not all environments have bash available.
+test: $(eval SHELL:=/bin/bash) ## Run tests (requires a running Flask).
+	@if [ $$(date +"%M") == "00" ]; then \
+		echo "TESTS WILL FAIL NOW: try in a munute! \
+	(See \`replace_minutes_and_seconds()\` in tests.py)"; \
+	else \
+		$(PYTHON) tests.py; \
+	fi
 
 t: r ## Run Flask app and tests.
 	sleep 5; make test
@@ -50,24 +68,28 @@ check_connects: ## Active Internet connections.
 	netstat -tulpn
 
 kill_soap: ## Kill Soap server PID (Bitrix emulation).
-	kill `lsof -t -i:8000` || true
+	@kill `lsof -t -i:8000` 2>/dev/null || true
 
 kill_app: ## Kill Flask app PID.
-	kill `lsof -t -i:5000` || true
+	@kill `lsof -t -i:5000` 2>/dev/null || true
 
 kill_all: ## Kill Soap server and Flask app.
-	make kill_soap kill_app
+	@make kill_soap kill_app
 
 reload: ## Reload Flask app.
-	make kill_all r
+	@make kill_all r
 
 retest: clean1 ## Clear logs and other data and restart tests.
-	make kill_all t
+	@make kill_all t
 
-git: check retest clean2 ## make git m="message"
-	git add .
-	git commit -m "$m"
-	git push -u origin main
+# cntl+c to break at any monent.
+git: check retest clean2 ## Pre-push hook (make git m="message").
+	@python3 -c "import os; os.system('git diff' if input('git diff: [Y/n]') in 'Yy' else '')"
+	git add . && git status
+	@python3 -c "import os; os.system(input())"
+	git commit -m "$m" && git log -1
+	@python3 -c "import os; os.system('git reset --soft HEAD~1' if input('Undo last commit: [Y/n]') in 'Yy' else '')"
+	@python3 -c "import os; os.system('git push -u origin main' if input('git push: [Y/n]') in 'Yy' else '')"
 
 warnings:  ## Check dev artifacts.
 	grep --color="always" --include="*.py" -i -r -n -w . -e 'print\|fixme\|refactorme'
@@ -84,7 +106,7 @@ docker_build_nc: ## Build the container without caching.
 # --detach, -t - Run container in background and print container ID.
 # --tty, -t - Allocate a pseudo-TTY.
 # --rm - Automatically remove the container when it exits.
-docker_run:  ## Run (-dt --rm) Docker container with environment variables.
+docker_run:  ## Run (-dt --rm) the container with environment variables.
 	docker run --detach --tty --rm \
 	--env WSDL_URL \
 	--env BITRIX_EMULATION \

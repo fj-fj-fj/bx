@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from fast_bitrix24 import Bitrix  # type: ignore
+from fast_bitrix24 import Bitrix
 from flask import Flask, request
 
 from settings import BX_URL, get_webhook

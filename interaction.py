@@ -7,7 +7,7 @@ import requests
 from copy import deepcopy
 from typing import Any, Optional, Union
 
-from fast_bitrix24 import Bitrix as true_bx  # type: ignore
+from fast_bitrix24 import Bitrix as true_bx
 
 from emulation.client import Bitrix as false_bx
 from settings import CBR_URL, get_bx_valutes
@@ -30,17 +30,17 @@ class CRM:
         self._webhook = webhook
         # will be setted in self._api()
         self._bx_errors: Optional[dict] = None
-        self._bx_responce: Optional[dict] = None
+        self._bx_responce: dict = {}
         # will be setted in self._client_exists()
         self._client_name: Optional[str] = None
-        self._current_client: Optional[dict] = None
+        self._current_client: dict = {}
         # will be setted in self._deal_exists()
         self._delivery_code: Optional[str] = None
-        self._fined_deal: Optional[dict] = None
+        self._fined_deal: dict = {}
         # will be setted in self._bind_client_with_deal()
-        self._client_with_deal: Optional[dict] = None
+        self._client_with_deal: dict = {}
         # will be setted in self._request()
-        self._responce: Optional[dict] = None
+        self._responce: dict = {}
         self._errors: Optional[dict] = None
 
     def _clent_exists(self, action: str = 'crm.contact.list') -> bool:
@@ -49,7 +49,7 @@ class CRM:
         self._client_name = self._current_deal.get('client', {}).get('name')
         self._api(action)
 
-        for contact in self._bx_responce.get('contacts'):  # type: ignore
+        for contact in self._bx_responce.get('contacts', {}):
             if contact.get('name') == self._client_name:
                 self._current_client = contact
                 return True
@@ -61,7 +61,7 @@ class CRM:
         self._delivery_code = self._current_deal.get('delivery_code')
         self._api(action)
 
-        for deal in self._bx_responce.get('deal'):  # type: ignore
+        for deal in self._bx_responce.get('deal', {}):
             if deal.get('delivery_code') == self._delivery_code:
                 self._fined_deal = deal
                 return True
@@ -71,40 +71,40 @@ class CRM:
         logging.info(f'self._api({operation=}): running ...\n{params=}\n')
 
         self._bx_responce = json.loads(
-            self._webhook.get_all(operation, params=params),  # type: ignore
+            self._webhook.get_all(operation, params=params),
         )
         logging.info(f'CRM._api() sets {self._bx_responce=}\n')
         assert isinstance(self._bx_responce, dict)
 
-        self._bx_errors = self._check_errors('_bx_responce') and self._bx_responce or None  # noqa: E501
+        self._bx_errors = self._check_errors('_bx_responce') and self._bx_responce or None
         if self._bx_errors:
             logging.error(f'CRM._api() sets {self._bx_errors=}\n')
             raise self._bx_errors['error_description']
 
     def _check_errors(self, responce: str) -> bool:
-        return (res := getattr(self, responce)) and 'error' in res.keys()  # type: ignore # noqa: E501
+        return (res := getattr(self, responce)) and 'error' in res.keys()
 
     def _bind_client_with_deal(self, client_exist: bool = False):
-        logging.info(f'self._bind_client_with_deal({client_exist=}): running ...\n')  # noqa: E501
+        logging.info(f'self._bind_client_with_deal({client_exist=}): running ...\n')
 
         if client_exist:
-            self._current_client['deal'].append(self._current_deal['delivery_code'])  # type: ignore # noqa: E501
+            self._current_client['deal'].append(self._current_deal['delivery_code'])
         else:
-            self._client_with_deal = deepcopy(self._current_deal.get('client'))
-            self._client_with_deal['deal'] = self._client_with_deal.get('deal', [])  # type: ignore # noqa: E501
-            self._client_with_deal['deal'].append(self._current_deal['delivery_code'])  # type: ignore # noqa: E501
+            self._client_with_deal = deepcopy(dict(self._current_deal.get('client', {})))
+            self._client_with_deal['deal'] = self._client_with_deal.get('deal', [])
+            self._client_with_deal['deal'].append(self._current_deal['delivery_code'])
 
     def _equiualent(self) -> bool:
         return all(
-            [self._fined_deal[k] == self._current_deal[k] for k in self.UPDATEBLE]  # type: ignore # noqa: E501
+            [self._fined_deal[k] == self._current_deal[k] for k in self.UPDATEBLE]
         )
 
-    def _request(self, url: str = CBR_URL, format: str = 'json', save: bool = True):  # noqa: E501
+    def _request(self, url: str = CBR_URL, format: str = 'json', save: bool = True):
         logging.info(f'self._request({url=}): running ...\n')
 
         result = getattr(requests.get(url), format)
         self._response = callable(result) and result() or result
-        self._errors = self._check_errors('_responce') and self._responce or None  # noqa: E501
+        self._errors = self._check_errors('_responce') and self._responce or None
 
         if save and self._errors is None:
             self._save(self._response, 'data', 'daily.json', 'w', format)
@@ -141,9 +141,7 @@ class CRM:
         logging.info('self._update_fields(): running ...\n')
 
         for key in self.UPDATEBLE:
-            self._fined_deal.update(  # type: ignore
-                {key: self._current_deal.get(key)},
-            )
+            self._fined_deal.update({key: self._current_deal.get(key)})
         self._api('crm.deal.update', params=str(self._fined_deal))
 
         logging.warning(self._bx_errors)
