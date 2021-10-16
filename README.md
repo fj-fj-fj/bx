@@ -76,6 +76,7 @@ $ docker run --detach --tty --rm \
 	--env FLASK_APP \
 	--env FLASK_DEBUG \
 	--env FLASK_ENV \
+	--env TZ=$(cat /etc/timezone) \
 	--name "$(APP_NAME)" $(APP_NAME)
 $ # Или используйте make цели (e.g., make up)
 ```

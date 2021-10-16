@@ -443,7 +443,7 @@ class FunctionalTest(unittest.TestCase):
 
     def test_update_currency(self):
         """
-        "www.cbr-xml-daily.ru/daily_json.js GET" request.
+        "www.cbr-xml-daily.ru/daily_json.js" GET request.
         Updating all valutes in Bitrix.
         """
         from interaction import CRM
@@ -463,12 +463,16 @@ class FunctionalTest(unittest.TestCase):
 
         cbr_timestamp = replace_minutes_and_seconds(row_data['Timestamp'])
         now_timestamp = replace_minutes_and_seconds(get_now_timestamp())
+        # WARNING:
         # Sometimes there may be such a problem:
         # - 2021-10-14T22****+03:00
         # ?             ^
         # + 2021-10-14T23****+03:00
         # ?             ^
         # Just restart in a minute :)
+        # WARNING:
+        # Lastest update of the central bank database - 23:00:00
+        # if TZ=Europe/Moscow and time > 23:00:00 then this test case will fail.
         self.assertEqual(cbr_timestamp, now_timestamp)
 
         # 1

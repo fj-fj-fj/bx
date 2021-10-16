@@ -95,6 +95,7 @@ docker_run:  ## Run (-dt --rm) Docker container with environment variables.
 	--env FLASK_APP \
 	--env FLASK_DEBUG \
 	--env FLASK_ENV \
+	--env TZ=$$(cat /etc/timezone) \
 	--name "$(APP_NAME)" $(APP_NAME)
 
 docker_bash: ## Execute an interactive bash shell on the container.
