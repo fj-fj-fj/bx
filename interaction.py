@@ -55,6 +55,20 @@ class CRM:
     def _generate(error: tuple) -> dict[str, str]:
         return {"Error": (type(error).__name__), "Error description": str(error)}
 
+    def __repr__(self) -> str:
+        return f'{type(self).__name__}({self._webhook!r}, {self._current_deal!r})'
+
+    def __str__(self) -> str:
+        if self._validated_success:
+            deal = (
+                f"{{deal: ... '{self._current_deal['client']['name']}', "
+                f"'{self._current_deal['client']['phone']}', "
+                f"'{self._current_deal['delivery_code']}' }}"
+            )
+            # CRM(webhook, "{deal: ... 'name', 'phone', 'delivery_code' }")
+            return f'{type(self).__name__}({self._webhook!r}, {deal!r})'
+        return f'{type(self).__name__}({self._webhook!r}, no-validated-deal)>'
+
     def _validate(self, step: int = 0) -> bool:
         logging.info(f'\tself._validate({step=}) running ...')
         for key in EXPECTED_JSON_KEYS[step]:
