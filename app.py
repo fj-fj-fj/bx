@@ -15,7 +15,9 @@ Webhook: Bitrix = get_webhook(BX_URL)
 def index():
     if request.method == 'POST':
         deal: dict = request.json
-        CRM(Webhook, deal).create_or_update()
+        crm = CRM(Webhook, deal)
+        responce = crm.create_or_update()
+        return responce if isinstance(responce, dict) else 'OK'
     return 'OK'
 
 

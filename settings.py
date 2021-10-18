@@ -17,9 +17,26 @@ USER_ID = os.getenv('USER_ID')
 SECRET_TOKEN = os.getenv('SECRET_TOKEN')
 BX_URL = f'https://{COMPANY}.bitrix24.ru/rest/{USER_ID}/{SECRET_TOKEN}'
 
+EXPECTED_JSON_KEYS = [
+    (
+        'title',
+        'description',
+        'client',
+        'products',
+        'delivery_adress',
+        'delivery_code',
+        'delivery_date',
+    ),
+    (
+        'name',
+        'surname',
+        'phone',
+        'adress',
+    )
+]
 
 # Я допускаю, что идентификаторы валют в битриксе такие:
-def get_bx_valutes() -> dict[str, int]:
+def get_bx_valutes() -> dict[str, int]:  # noqa: E302
     return dict(EUR=1, USD=2, KZT=3, PLN=4)
 
 

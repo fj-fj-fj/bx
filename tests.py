@@ -485,6 +485,33 @@ class FunctionalTest(unittest.TestCase):
         cbr_usd_value = row_data['Valute']['USD']['Value']
         self.assertEqual(cbr_usd_value, bx_usd_value)
 
+    def test_bad_format_post_data(self):
+        """
+        request with bad post data.
+        return internal error.
+        """
+        bad_post_data = {
+            "title": "title",
+            "description": "Some description",
+            # "client": { post_data with no client
+            #     "name": "Jon",
+            #     "surname": "Karter",
+            #     "phone": "+77777777777",
+            #     "adress": "st. Mira, 287, Moscow"
+            # },
+            "products": ["Candy", "Carrot", "Potato"],
+            "delivery_adress": "st. Mira, 211, Ekaterinburg",
+            "delivery_date": "2021-01-01:16:00",
+            "delivery_code": "#232nkF3fAdn"
+        }
+
+        result = requests.post(self.url, json=bad_post_data)
+        expected_internal_error = {
+            "Error": "KeyError",
+            "Error description": "'client'"
+        }
+        self.assertEqual(result.json(), expected_internal_error)
+
 
 def suite():
     """Create a callable test-suite generation added in desired order."""
@@ -495,6 +522,7 @@ def suite():
     suite.addTest(FunctionalTest('test_create_second_client_with_deal'))
     suite.addTest(FunctionalTest('test_add_deal'))
     suite.addTest(FunctionalTest('test_update_currency'))
+    suite.addTest(FunctionalTest('test_bad_format_post_data'))
     return suite
 
 

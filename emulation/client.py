@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import logging
 import os
 from typing import Optional
 
@@ -8,9 +7,6 @@ import requests
 import zeep
 
 URL = os.getenv('WSDL_URL', 'http://127.0.0.1:8000/?wsdl')
-
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 
 
 class Bitrix:
@@ -23,7 +19,6 @@ class Bitrix:
             os.system('make check_connections && code app.log')
 
     def get_all(self, operation: str, params: Optional[str]) -> str:
-        logging.info(f'Bitrix.get_all({operation=}, {params=})')
         operation = operation.replace('.', '_')
 
         for service in self._client.wsdl.services.values():

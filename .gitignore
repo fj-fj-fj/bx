@@ -1,6 +1,6 @@
 # global
 __pycache__
-py[cod]
+*.py[cod]
 
 # third
 .mypy_cache
@@ -9,4 +9,6 @@ py[cod]
 .envrc
 *.log
 !interaction.log
+*foo*
+*bar*
 data/

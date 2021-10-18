@@ -83,6 +83,7 @@ retest: clean1 ## Clear logs and other data and restart tests.
 	@make kill_all t
 
 # cntl+c to break at any monent.
+# WARNING: after 23:00 (central bank latest update) Moscow time, tests will not pass.
 git: check retest clean2 ## Pre-push hook (make git m="message").
 	@python3 -c "import os; os.system('git diff' if input('git diff: [Y/n]') in 'Yy' else '')"
 	git add . && git status
