@@ -1,8 +1,11 @@
-PYTHON := python3
 APP_NAME := bx24
 APP_LOG := interaction.log
 SOAP_LOG := emulation/server.log
 COMMON_LOG := common.save.log
+
+VENV := ../.venv
+PYTHON := $(VENV)/bin/python3
+PIP := $(VENV)/bin/pip
 
 ifndef VERBOSE
 MAKEFLAGS += --no-print-directory
@@ -22,6 +25,13 @@ setup: ## Clone repo into bx/src/, create .venv into bx/ and pip install require
 check_virtual_env: ## Determine if Python is running inside virtualenv.
 	@echo $${VIRTUAL_ENV?"[ERROR]: Virtual environment not activated!"}
 
+# Whenever requirements.txt changes, it rebuilds the environment and
+# installs the dependencies with pip, which re-creates the activate.
+# NOTE: will install -r requirements.txt -r emulation/requirements.txt -r requirements/lint.txt
+$(VENV)/bin/activate: requirements.txt ## Automatically refresh $(VENV) and pip reinstall whenever the requirements.txt file changes.
+	python3 -m venv $(VENV)
+	$(PIP) install -r requirements.txt
+
 soap: ## Bitrix API emulation.
 	nohup $(PYTHON) emulation/server.py >> $(SOAP_LOG) &
 
@@ -32,12 +42,12 @@ browse: ## Open root page in browser (google-chrome).
 	nohup google-chrome http://127.0.0.1:5000/ >> chrome.log &
 
 style: ## Check styles with flake8.
-	flake8 --max-line-length=100 --exclude data .
+	$(VENV)/bin/flake8 --max-line-length=100 --exclude data .
 
 typos: ## Check types with mypy.
-	mypy --allow-redefinition --ignore-missing-imports --exclude data .
+	$(VENV)/bin/mypy --allow-redefinition --ignore-missing-imports --exclude data .
 
-check: check_virtual_env ## Check styles and types.
+check: ## Check styles and types.
 	make style typos
 
 update_log: ## Dump all logs into common.save.log and clean up.
@@ -45,10 +55,10 @@ update_log: ## Dump all logs into common.save.log and clean up.
 	@test -f $(SOAP_LOG) || touch $(SOAP_LOG)
 	@cat $(APP_LOG) $(SOAP_LOG) >> $(COMMON_LOG) && >$(APP_LOG) && >$(SOAP_LOG)
 
-run: ## Run Flask app.
+run: $(VENV)/bin/activate ## Run app with virtual environment.
 	nohup $(PYTHON) app.py >> $(APP_LOG) &
 
-r: check_virtual_env update_log ## Update logs, start Bitrix emulation and app.
+r: update_log ## Update logs, start Bitrix emulation and app.
 	make soap run
 
 clean1 clean2 &: ## Returns emulation/scm/**/list.json files to its original state.

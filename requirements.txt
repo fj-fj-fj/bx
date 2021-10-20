@@ -3,3 +3,4 @@ Flask==2.0.2
 requests==2.25.1
 
 -r emulation/requirements.txt
+-r requirements/lint.txt
