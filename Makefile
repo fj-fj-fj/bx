@@ -11,6 +11,12 @@ endif
 help: # This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+setup: ## Clone repo into bx/src/, create .venv into bx/ and pip install requirements.
+	mkdir bx \
+	&& git -C ./bx clone https://github.com/fj-fj-fj/bx.git src\
+	&& $(PYTHON) -m venv bx/.venv \
+	&& bx/.venv/bin/pip install -r bx/src/requirements.txt
+
 # `venv` sets the environment variable `$VIRTUAL_ENV` when activating an environment.
 # This only works when the environment is activated by the activate shell script.
 check_virtual_env: ## Determine if Python is running inside virtualenv.
@@ -84,7 +90,7 @@ retest: clean1 ## Clear logs and other data and restart tests.
 
 # cntl+c to break at any monent.
 # WARNING: after 23:00 (central bank latest update) Moscow time, tests will not pass.
-git: check retest clean2 ## Pre-push hook (make git m="message").
+git: check retest clean2 ## Pre-push hook with "interprocess communication" (make git m="message").
 	@python3 -c "import os; os.system('git diff' if input('git diff: [Y/n]') in 'Yy' else '')"
 	git add . && git status
 	@python3 -c "import os; os.system(input())"
