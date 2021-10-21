@@ -4,15 +4,14 @@
 Обновляет контакты, сделки и валюты, используя [Bitrix24 REST API](https://dev.1c-bitrix.ru/rest_help/index.php)  
 (точнее не совсем)
 #
-> В общем у меня нет доступа к Битриксу, поэтому мой Битрикс  
-это [emulation/server.py](emulation/server.py)  
-А библиотекой, такой как  `fast-bitix24`, пусть служит [emulation/client.py](emulation/client.py)  
+> В общем, у меня нет доступа к Битриксу, поэтому мой Битрикс - это [emulation/server.py](emulation/server.py).  
+А библиотекой, такой как  `fast-bitix24`, пусть служит [emulation/client.py](emulation/client.py).  
 В [emulation/crm/](emulation/crm/) можно увидеть структуры, в которых сохраняются данные.
 
 #
 ## Как работает
-`CRM` объект ожидает на вход новую заявку.  
-Проверяет, существует ли контакт, указанный пришедшей в заявке.  
+`interaction.CRM` объект ожидает на вход новую заявку.  
+Проверяет, существует ли контакт, указанный в пришедшей заявке.  
 Если контакт не существует - создает его, заявку и связывает их.  
 Если контакт есть - проверяет наличие такой же заявки по `delivery_code`.  
 Если заявка есть и данные не отличаются - действий нет.  
@@ -31,7 +30,7 @@
 sudo apt-get update && sudo apt-get install direnv
 echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
 source .bashrc
-# Или просто установите переменные из .envrc.sample
+# Или установите переменные вручную из .envrc.sample
 ```
 
 #
@@ -80,5 +79,5 @@ docker run --detach --tty --rm \
 	--env FLASK_ENV \
 	--env TZ=$(cat /etc/timezone) \
 	--name "$(APP_NAME)" $(APP_NAME)
-# Или используйте make цели (e.g., make up)
+# Или используйте make цели (e.g., `make up`)
 ```
