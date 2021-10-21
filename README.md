@@ -37,11 +37,11 @@ source .bashrc
 #
 ## Установка
 ```bash
-git -C bx/ clone https://github.com/fj-fj-fj/bx.git src && cd bx
+mkdir -p bx && cd bx && git clone https://github.com/fj-fj-fj/bx.git src
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -U pip && pip install -r src/requirements.txt
-# Или выполните команду `make install`
+# Или выполните команду `make setup`
 
 # Если direnv был установлен:
 mv .envrc.sample .envrc
